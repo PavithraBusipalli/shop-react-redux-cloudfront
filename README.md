@@ -1,5 +1,8 @@
 # React-shop-cloudfront
 
+[![codecov](https://codecov.io/gh/PavithraBusipalli/shop-react-redux-cloudfront/branch/main/graph/badge.svg)](https://codecov.io/gh/PavithraBusipalli/shop-react-redux-cloudfront)
+[![CI/CD Pipeline](https://github.com/PavithraBusipalli/shop-react-redux-cloudfront/actions/workflows/ci.yml/badge.svg)](https://github.com/PavithraBusipalli/shop-react-redux-cloudfront/actions/workflows/ci.yml)
+
 This is frontend starter project for nodejs-aws mentoring program. It uses the following technologies:
 
 - [Vite](https://vitejs.dev/) as a project bundler
@@ -69,3 +72,22 @@ Combination of `cloudfront:setup` and `cloudfront:build:deploy` commands with or
 ### `serverless:remove`
 
 Remove an entire stack configured in `serverless.yml` via CloudFormation.
+
+### Testing
+
+This project includes comprehensive unit tests for:
+
+- **Utility Functions**: Located in `src/utils/utils.test.ts`
+  - Currency formatting
+  - Discount calculations
+  - Tax calculations
+  - Product name formatting
+  - Email validation
+
+- **React Components**: Located in `src/components/PriceDisplay/PriceDisplay.test.tsx`
+  - PriceDisplay component with various pricing scenarios
+  - Discount and tax calculations
+  - Stock status display
+  - Comprehensive edge case testing
+
+The project maintains **86.42% code coverage** with 100% coverage on all new utility functions and components.

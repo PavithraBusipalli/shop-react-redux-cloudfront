@@ -12,10 +12,24 @@ export default defineConfig({
       "~": path.resolve(__dirname, "src"),
     },
   },
-  plugins: [react()],
-  test: {
+  plugins: [react()],  test: {
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/setupTests.ts",
+    coverage: {
+      reporter: ["text", "json", "html", "lcov"],
+      exclude: [
+        "node_modules/",
+        "src/setupTests.ts",
+        "**/*.d.ts",
+        "**/*.test.{ts,tsx}",
+        "**/*.spec.{ts,tsx}",
+        "coverage/**",
+        "dist/**",
+        "**/*.config.{ts,js}",
+        "src/mocks/**",
+        "src/vite-env.d.ts"
+      ]
+    }
   },
 });
