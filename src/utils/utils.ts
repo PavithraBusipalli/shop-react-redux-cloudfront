@@ -80,18 +80,57 @@ export const isInStock = (quantity: number): boolean => {
 
 /**
  * Calculate shipping cost based on weight and distance
- * @param weight - Weight in kg
- * @param distance - Distance in km
- * @returns The shipping cost
+ * @param weight - Weight in pounds
+ * @param distance - Distance in miles
+ * @param expedited - Whether to use expedited shipping
+ * @returns Shipping cost in dollars
  */
-export const calculateShippingCost = (weight: number, distance: number): number => {
+export function calculateShippingCost(weight: number, distance: number, expedited: boolean = false): number {
   if (weight <= 0 || distance <= 0) {
-    throw new Error("Weight and distance must be positive numbers");
+    return 0;
   }
   
-  const baseRate = 5; // Base shipping rate
-  const weightRate = 0.5; // Per kg rate
-  const distanceRate = 0.1; // Per km rate
+  const baseRate = 0.5; // $0.50 per pound
+  const distanceRate = 0.001; // $0.001 per mile
+  const expeditedMultiplier = 2;
   
-  return baseRate + (weight * weightRate) + (distance * distanceRate);
-};
+  let cost = (weight * baseRate) + (distance * distanceRate);
+  
+  if (expedited) {
+    cost *= expeditedMultiplier;
+  }
+  
+  // Minimum shipping cost of $5
+  return Math.max(cost, 5);
+}
+
+/**
+ * Generate a unique order ID
+ * @param prefix - Optional prefix for the order ID
+ * @returns A unique order ID string
+ */
+export function generateOrderId(prefix: string = 'ORD'): string {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `${prefix}-${timestamp}-${random}`;
+}
+
+/**
+ * Calculate estimated delivery date
+ * @param orderDate - The date the order was placed
+ * @param expedited - Whether expedited shipping is used
+ * @returns Estimated delivery date
+ */
+export function calculateDeliveryDate(orderDate: Date, expedited: boolean = false): Date {
+  const deliveryDate = new Date(orderDate);
+  const daysToAdd = expedited ? 2 : 5; // 2 days for expedited, 5 for standard
+  
+  deliveryDate.setDate(deliveryDate.getDate() + daysToAdd);
+  
+  // Skip weekends for delivery
+  while (deliveryDate.getDay() === 0 || deliveryDate.getDay() === 6) {
+    deliveryDate.setDate(deliveryDate.getDate() + 1);
+  }
+  
+  return deliveryDate;
+}

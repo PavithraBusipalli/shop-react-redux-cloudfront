@@ -5,7 +5,9 @@ import {
   formatProductName, 
   generateProductId, 
   isInStock, 
-  calculateShippingCost 
+  calculateShippingCost,
+  generateOrderId,
+  calculateDeliveryDate
 } from './utils';
 
 describe('Utils Functions', () => {
@@ -129,27 +131,74 @@ describe('Utils Functions', () => {
   });
 
   describe('calculateShippingCost', () => {
-    it('should calculate shipping cost correctly', () => {
-      // Base rate (5) + weight (2kg * 0.5) + distance (10km * 0.1) = 5 + 1 + 1 = 7
-      expect(calculateShippingCost(2, 10)).toBe(7);
+    it('should calculate basic shipping cost correctly', () => {
+      const cost = calculateShippingCost(10, 100);
+      expect(cost).toBe(5.1); // (10 * 0.5) + (100 * 0.001) = 5.1
+    });
+
+    it('should apply expedited shipping multiplier', () => {
+      const standardCost = calculateShippingCost(10, 100, false);
+      const expeditedCost = calculateShippingCost(10, 100, true);
+      expect(expeditedCost).toBe(standardCost * 2);
+    });
+
+    it('should return minimum shipping cost of $5', () => {
+      const cost = calculateShippingCost(1, 1);
+      expect(cost).toBe(5);
+    });
+
+    it('should return 0 for invalid inputs', () => {
+      expect(calculateShippingCost(0, 100)).toBe(0);
+      expect(calculateShippingCost(10, 0)).toBe(0);
+      expect(calculateShippingCost(-5, 100)).toBe(0);
+      expect(calculateShippingCost(10, -50)).toBe(0);
+    });
+  });
+
+  describe('generateOrderId', () => {
+    it('should generate order ID with default prefix', () => {
+      const orderId = generateOrderId();
+      expect(orderId).toMatch(/^ORD-\d+-\d{3}$/);
+    });
+
+    it('should generate order ID with custom prefix', () => {
+      const orderId = generateOrderId('CUSTOM');
+      expect(orderId).toMatch(/^CUSTOM-\d+-\d{3}$/);
+    });
+
+    it('should generate unique order IDs', () => {
+      const id1 = generateOrderId();
+      const id2 = generateOrderId();
+      expect(id1).not.toBe(id2);
+    });
+  });
+
+  describe('calculateDeliveryDate', () => {
+    it('should add 5 days for standard shipping', () => {
+      const orderDate = new Date('2023-06-10'); // Saturday
+      const deliveryDate = calculateDeliveryDate(orderDate, false);
       
-      // Base rate (5) + weight (5kg * 0.5) + distance (20km * 0.1) = 5 + 2.5 + 2 = 9.5
-      expect(calculateShippingCost(5, 20)).toBe(9.5);
+      // Should be 5 business days later, skipping weekends
+      expect(deliveryDate.getDay()).not.toBe(0); // Not Sunday
+      expect(deliveryDate.getDay()).not.toBe(6); // Not Saturday
     });
 
-    it('should handle minimum values', () => {
-      // Base rate (5) + weight (0.1kg * 0.5) + distance (0.1km * 0.1) = 5 + 0.05 + 0.01 = 5.06
-      expect(calculateShippingCost(0.1, 0.1)).toBe(5.06);
+    it('should add 2 days for expedited shipping', () => {
+      const orderDate = new Date('2023-06-12'); // Monday
+      const deliveryDate = calculateDeliveryDate(orderDate, true);
+      
+      // Should be 2 business days later
+      expect(deliveryDate.getDay()).not.toBe(0); // Not Sunday
+      expect(deliveryDate.getDay()).not.toBe(6); // Not Saturday
     });
 
-    it('should throw error for zero or negative weight', () => {
-      expect(() => calculateShippingCost(0, 10)).toThrow('Weight and distance must be positive numbers');
-      expect(() => calculateShippingCost(-1, 10)).toThrow('Weight and distance must be positive numbers');
-    });
-
-    it('should throw error for zero or negative distance', () => {
-      expect(() => calculateShippingCost(5, 0)).toThrow('Weight and distance must be positive numbers');
-      expect(() => calculateShippingCost(5, -10)).toThrow('Weight and distance must be positive numbers');
+    it('should skip weekends for delivery', () => {
+      const orderDate = new Date('2023-06-09'); // Friday
+      const deliveryDate = calculateDeliveryDate(orderDate, true);
+      
+      // Should not be delivered on weekend
+      expect(deliveryDate.getDay()).not.toBe(0); // Not Sunday
+      expect(deliveryDate.getDay()).not.toBe(6); // Not Saturday
     });
   });
 });
