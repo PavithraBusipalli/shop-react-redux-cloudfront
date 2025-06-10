@@ -7,7 +7,8 @@ import {
   isInStock, 
   calculateShippingCost,
   generateOrderId,
-  calculateDeliveryDate
+  calculateDeliveryDate,
+  formatDate
 } from './utils';
 
 describe('Utils Functions', () => {
@@ -199,6 +200,20 @@ describe('Utils Functions', () => {
       // Should not be delivered on weekend
       expect(deliveryDate.getDay()).not.toBe(0); // Not Sunday
       expect(deliveryDate.getDay()).not.toBe(6); // Not Saturday
+    });
+  });
+
+  describe('formatDate', () => {
+    it('should format date correctly', () => {
+      const date = new Date('2023-06-15');
+      const formatted = formatDate(date);
+      expect(formatted).toBe('June 15, 2023');
+    });
+
+    it('should handle different dates', () => {
+      const date = new Date('2024-12-25');
+      const formatted = formatDate(date);
+      expect(formatted).toBe('December 25, 2024');
     });
   });
 });
