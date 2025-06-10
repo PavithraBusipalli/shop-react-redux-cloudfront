@@ -8,7 +8,9 @@ import {
   calculateShippingCost,
   generateOrderId,
   calculateDeliveryDate,
-  formatDate
+  formatDate,
+  calculateLoyaltyPoints,
+  formatPhoneNumber
 } from './utils';
 
 describe('Utils Functions', () => {
@@ -214,6 +216,85 @@ describe('Utils Functions', () => {
       const date = new Date('2024-12-25');
       const formatted = formatDate(date);
       expect(formatted).toBe('December 25, 2024');
+    });
+  });
+
+  describe('calculateLoyaltyPoints', () => {
+    it('should calculate basic points for bronze tier', () => {
+      const points = calculateLoyaltyPoints(100, 'bronze');
+      expect(points).toBe(100); // 1 point per dollar for bronze
+    });
+
+    it('should apply tier multipliers correctly', () => {
+      expect(calculateLoyaltyPoints(100, 'bronze')).toBe(100);
+      expect(calculateLoyaltyPoints(100, 'silver')).toBe(150);
+      expect(calculateLoyaltyPoints(100, 'gold')).toBe(200);
+      expect(calculateLoyaltyPoints(100, 'platinum')).toBe(300);
+    });
+
+    it('should add first purchase bonus', () => {
+      const points = calculateLoyaltyPoints(100, 'bronze', true);
+      expect(points).toBe(150); // 100 base + 50 first purchase bonus
+    });
+
+    it('should add large purchase bonus', () => {
+      const points = calculateLoyaltyPoints(600, 'bronze', false);
+      expect(points).toBe(700); // 600 base + 100 large purchase bonus
+    });
+
+    it('should combine all bonuses for platinum first purchase over $500', () => {
+      const points = calculateLoyaltyPoints(600, 'platinum', true);
+      expect(points).toBe(1950); // (600 * 3) + 50 + 100 = 1950
+    });
+
+    it('should return 0 for zero or negative amounts', () => {
+      expect(calculateLoyaltyPoints(0)).toBe(0);
+      expect(calculateLoyaltyPoints(-50)).toBe(0);
+    });
+
+    it('should use bronze as default tier', () => {
+      const points = calculateLoyaltyPoints(100);
+      expect(points).toBe(100);
+    });    it('should handle fractional purchase amounts', () => {
+      const points = calculateLoyaltyPoints(99.99, 'silver');
+      expect(points).toBe(148); // Math.floor(99.99 * 1.5) = 148 (corrected)
+    });
+  });
+
+  describe('formatPhoneNumber', () => {
+    it('should format 10-digit US phone numbers', () => {
+      expect(formatPhoneNumber('1234567890')).toBe('(123) 456-7890');
+      expect(formatPhoneNumber('555-123-4567')).toBe('(555) 123-4567');
+      expect(formatPhoneNumber('(555) 123-4567')).toBe('(555) 123-4567');
+    });
+
+    it('should format 11-digit numbers with country code', () => {
+      expect(formatPhoneNumber('11234567890')).toBe('+1 (123) 456-7890');
+      expect(formatPhoneNumber('1-555-123-4567')).toBe('+1 (555) 123-4567');
+    });
+
+    it('should handle numbers with various formatting', () => {
+      expect(formatPhoneNumber('(555) 123.4567')).toBe('(555) 123-4567');
+      expect(formatPhoneNumber('555 123 4567')).toBe('(555) 123-4567');
+      expect(formatPhoneNumber('555.123.4567')).toBe('(555) 123-4567');
+    });    it('should return null for invalid numbers', () => {
+      expect(formatPhoneNumber('')).toBe(null);
+      expect(formatPhoneNumber('123')).toBe(null);
+      expect(formatPhoneNumber('123456789012')).toBe(null); // 12 digits - too long
+      expect(formatPhoneNumber('21234567890')).toBe(null); // 11 digits but starts with 2
+      expect(formatPhoneNumber('abcdefghijk')).toBe(null); // Letters only, no digits
+    });
+
+    it('should return null for empty or undefined input', () => {
+      expect(formatPhoneNumber('')).toBe(null);
+      expect(formatPhoneNumber(null as any)).toBe(null);
+      expect(formatPhoneNumber(undefined as any)).toBe(null);
+    });
+
+    it('should handle international numbers correctly', () => {
+      // Only US numbers should be valid
+      expect(formatPhoneNumber('441234567890')).toBe(null); // UK number
+      expect(formatPhoneNumber('331234567890')).toBe(null); // French number
     });
   });
 });

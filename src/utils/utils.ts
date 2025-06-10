@@ -147,3 +147,72 @@ export function formatDate(date: Date): string {
     day: 'numeric'
   });
 }
+
+/**
+ * Calculate loyalty points based on purchase amount and customer tier
+ * @param purchaseAmount - The total purchase amount
+ * @param customerTier - The customer tier ('bronze', 'silver', 'gold', 'platinum')
+ * @param isFirstPurchase - Whether this is the customer's first purchase
+ * @returns The loyalty points earned
+ */
+export function calculateLoyaltyPoints(
+  purchaseAmount: number, 
+  customerTier: 'bronze' | 'silver' | 'gold' | 'platinum' = 'bronze',
+  isFirstPurchase: boolean = false
+): number {
+  if (purchaseAmount <= 0) {
+    return 0;
+  }
+
+  // Base points: 1 point per dollar
+  let points = Math.floor(purchaseAmount);
+
+  // Tier multipliers
+  const tierMultipliers = {
+    bronze: 1,
+    silver: 1.5,
+    gold: 2,
+    platinum: 3
+  };
+
+  points *= tierMultipliers[customerTier];
+
+  // First purchase bonus
+  if (isFirstPurchase) {
+    points += 50; // 50 bonus points for first purchase
+  }
+
+  // Bonus for large purchases
+  if (purchaseAmount >= 500) {
+    points += 100; // 100 bonus points for purchases over $500
+  }
+
+  return Math.floor(points);
+}
+
+/**
+ * Validate and format phone number
+ * @param phoneNumber - The phone number to validate and format
+ * @returns Formatted phone number or null if invalid
+ */
+export function formatPhoneNumber(phoneNumber: string): string | null {
+  if (!phoneNumber) {
+    return null;
+  }
+
+  // Remove all non-digits
+  const digits = phoneNumber.replace(/\D/g, '');
+
+  // Check if it's a valid US phone number (10 digits)
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+
+  // Check if it's a valid US phone number with country code (11 digits starting with 1)
+  if (digits.length === 11 && digits.startsWith('1')) {
+    const phoneDigits = digits.slice(1);
+    return `+1 (${phoneDigits.slice(0, 3)}) ${phoneDigits.slice(3, 6)}-${phoneDigits.slice(6)}`;
+  }
+
+  return null; // Invalid phone number
+}
